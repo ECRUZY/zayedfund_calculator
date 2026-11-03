@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Калькулятор займа ФШЗ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+  /* Layout: green band with title (как на сайте фонда), white terms card overlapping it, then form on the left and results on the right; stacks on phones */
+  /* Single light theme on purpose: matches the fund's site */
+  :root {
+    --bg: #f4f4f4;
+    --panel: #ffffff;
+    --fg: #1e1e1e;
+    --muted: #6f6f6f;
+    --line: #e4e4e4;
+    --accent: #396939;          /* green from the site */
+    --accent-soft: #edf3ed;
+    --band-light: #5ea85b;
+    --band-dark: #3c6a3a;
+    --grace: #be252a;           /* red from the site's buttons */
+    --grace-soft: #f8e9ea;
+    --warn: #be252a;
+    --on-band: #ffffff;
+    --font-head: "Century Gothic", "Montserrat", "Segoe UI", sans-serif;
+    --font-body: "Roboto", "Segoe UI", system-ui, sans-serif;
+    --font-num: "Roboto", "Segoe UI", system-ui, sans-serif;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; padding-block: 0 56px; }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+  .band { background: radial-gradient(ellipse 70% 120% at 65% 40%, var(--band-light) 0%, var(--band-dark) 75%); color: var(--on-band); }
+  .band-inner { max-width: 1120px; margin: 0 auto; padding-block: 36px 84px; display: grid; gap: 10px; }
+  .brand { font-size: 13px; font-weight: 500; opacity: 0.85; }
+  .band h1 { margin: 0; font: 700 clamp(28px, 4.5vw, 40px)/1.15 var(--font-head); text-wrap: balance; max-width: 22ch; }
+  .band p { margin: 0; font-size: 15px; opacity: 0.9; max-width: 60ch; }
+
+  .wrap { max-width: 1152px; margin: -52px auto 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; position: relative; }
+  .terms { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; margin: 0; background: var(--panel); border-radius: 12px; box-shadow: 0 6px 24px rgb(0 0 0 / 0.08); padding: 18px 8px; }
+  @media (max-width: 900px) { .terms { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 14px; } }
+  @media (max-width: 520px) { .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .terms div { display: grid; gap: 2px; padding: 0 14px; align-content: start; }
+  .terms dt { font-size: 12px; color: var(--muted); }
+  .terms dd { margin: 0; font: 700 17px/1.3 var(--font-head); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+  .inputs { display: grid; gap: 18px; }
+  .field { display: grid; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .inp { position: relative; }
+  .inp input {
+    width: 100%; font: 500 18px/1.2 var(--font-num); font-variant-numeric: tabular-nums;
+    color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    padding: 11px 52px 11px 12px; transition: border-color 0.15s;
+  }
+  .inp input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+  .inp .unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .seg button {
+    font: 500 13px var(--font-body); color: var(--grace); background: var(--grace-soft); border: 0; border-radius: 6px;
+    padding: 10px 8px; cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .seg button:hover { background: #f2d9db; }
+  .seg button[aria-pressed="true"] { background: var(--grace); color: #ffffff; }
+
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); margin: -6px 0 0; }
+  .tabs button {
+    font: 600 14px var(--font-body); color: var(--muted); background: transparent; border: 0; border-bottom: 3px solid transparent;
+    padding: 4px 6px 10px; margin-bottom: -1px; cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .right { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; }
+  .hero { display: grid; gap: 4px; }
+  .eyebrow { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .big { font: 700 clamp(32px, 5vw, 46px)/1.1 var(--font-head); font-variant-numeric: tabular-nums; color: var(--accent); overflow-wrap: anywhere; }
+  .sub { color: var(--muted); font-size: 14px; }
+  .error { color: var(--warn); font-weight: 500; }
+
+  .timeline { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--line); margin-top: 16px; gap: 2px; }
+  .timeline .g { background: var(--grace); }
+  .timeline .p { background: var(--accent); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 1040px) and (min-width: 861px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font: 700 16px var(--font-head); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  .sched-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .sched-head h2 { margin: 0; font: 700 22px var(--font-head); }
+  .table-box { overflow: auto; max-height: 520px; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 13px; }
+  th, td { padding: 8px 12px; text-align: right; white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--bg); font-weight: 500; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); z-index: 1; }
+  th:first-child, td:first-child { text-align: left; }
+  td { font-family: var(--font-num); font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line); }
+  tr.grace td { background: var(--grace-soft); }
+  tr.cap td { box-shadow: inset 0 2px 0 var(--grace); }
+  tfoot td { font-weight: 700; background: var(--accent-soft); position: sticky; bottom: 0; }
+  .tag { display: inline-block; font: 500 10px var(--font-body); color: #ffffff; background: var(--grace); border-radius: 10px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="band gutter">
+  <div class="band-inner">
+    <span class="brand">Фонд имени Шейха Зайеда</span>
+    <h1>Калькулятор займа</h1>
+    <p>Узнайте ежемесячный платёж по сроку или подберите срок под удобный платёж.</p>
+  </div>
+</div>
+
+<div class="wrap gutter">
+  <dl class="terms" id="terms"></dl>
+
+  <div class="grid">
+    <form class="panel inputs" id="form" autocomplete="off">
+      <div class="tabs" role="tablist" aria-label="Что рассчитать">
+        <button type="button" role="tab" id="modePay" aria-selected="true">Узнать платёж</button>
+        <button type="button" role="tab" id="modeTerm" aria-selected="false">Узнать срок</button>
+      </div>
+
+      <div class="field">
+        <label for="amount">Сумма займа</label>
+        <div class="inp"><input id="amount" inputmode="decimal" value="10 000 000"></div>
+      </div>
+
+      <div class="field" id="presetField">
+        <label id="presetLabel">Цель займа</label>
+        <div class="seg" role="group" aria-labelledby="presetLabel">
+          <button type="button" data-grace="3" data-term="33">Основные средства</button>
+          <button type="button" data-grace="3" data-term="21">Оборотные средства</button>
+        </div>
+      </div>
+
+      <div class="field" id="termField">
+        <label for="term">Срок займа, без льготного периода</label>
+        <div class="inp"><input id="term" inputmode="numeric" value="33"><span class="unit">мес.</span></div>
+      </div>
+
+      <div class="field" id="payField" hidden>
+        <label for="pay">Сколько готовы платить в месяц</label>
+        <div class="inp"><input id="pay" inputmode="decimal" value="500 000"></div>
+      </div>
+
+      <div class="field">
+        <label for="grace">Льготный период, без платежей</label>
+        <div class="inp"><input id="grace" inputmode="numeric" value="3"><span class="unit">мес.</span></div>
+      </div>
+    </form>
+
+    <div class="right">
+      <section class="panel">
+        <div class="hero">
+          <span class="eyebrow" id="heroLabel">Ежемесячный платёж</span>
+          <span class="big" id="heroValue">—</span>
+          <span class="sub" id="heroSub"></span>
+        </div>
+        <div class="timeline" id="timeline" aria-hidden="true"><div class="g" id="tlG"></div><div class="p" id="tlP"></div></div>
+        <div class="legend">
+          <span><i style="background:var(--grace)"></i><span id="lgG"></span></span>
+          <span><i style="background:var(--accent)"></i><span id="lgP"></span></span>
+        </div>
+      </section>
+
+      <div class="stats" id="stats"></div>
+
+      <section class="panel">
+        <div class="sched-head">
+          <h2>График платежей</h2>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr><th>Месяц</th><th>Долг на начало</th><th>Наценка</th><th>Платёж</th><th>Долг на конец</th></tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot id="tfoot"></tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Pure calculation, mirrors the "Традиционный займ" sheet.
+  function calc({ amount, rate, grace, term }) {
+    const i = rate / 100 / 12;
+    const graceInterest = amount * i;                 // per month, on the unchanged balance
+    const graceTotal = graceInterest * grace;
+    const base = amount + graceTotal;                 // balance after capitalisation
+    const n = term;
+    const payment = i === 0 ? base / n : base * i / (1 - Math.pow(1 + i, -n));
+
+    const rows = [];
+    let bal = amount;
+    for (let m = 1; m <= grace; m++) {
+      rows.push({ m, start: bal, interest: graceInterest, principal: 0, pay: 0, end: bal, grace: true });
+    }
+    bal = base;
+    let paidInterest = 0;
+    for (let k = 1; k <= n; k++) {
+      const interest = bal * i;
+      const principal = payment - interest;
+      const end = k === n ? 0 : bal - principal;
+      rows.push({ m: grace + k, start: bal, interest, principal, pay: payment, end, cap: k === 1 && grace > 0 });
+      paidInterest += interest; bal = end;
+    }
+    return { base, graceTotal, n, payment, paidInterest, totalPaid: payment * n,
+             overpay: graceTotal + paidInterest, rows };
+  }
+
+  const nf = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
+  const nfPct = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+  function fmt(x) { return nf.format(x); }
+  function num(s) { const v = parseFloat(String(s).replace(/[\s ]/g, "").replace(",", ".")); return isFinite(v) ? v : NaN; }
+  function months(n) {
+    const a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return n + " месяцев";
+    if (b === 1) return n + " месяц";
+    if (b > 1 && b < 5) return n + " месяца";
+    return n + " месяцев";
+  }
+
+  const RATE = 8;       // наценка, % в год (фиксированная)
+  const MAX_GRACE = 12, MAX_TERM = 60;
+  const $ = id => document.getElementById(id);
+  const presets = document.querySelectorAll("[data-term]");
+  let mode = "pay";   // "pay": срок → платёж, "term": желаемый платёж → срок
+
+  // Smallest whole term (up to MAX_TERM) whose equal payment fits into the budget
+  function termForPayment({ amount, rate, grace, budget }) {
+    for (let n = 1; n <= MAX_TERM; n++) {
+      if (calc({ amount, rate, grace, term: n }).payment <= budget + 0.005) return n;
+    }
+    return null;
+  }
+
+  function render() {
+    const amount = num($("amount").value), rate = RATE;
+    const grace = Math.round(num($("grace").value)), budget = num($("pay").value);
+    let term = Math.round(num($("term").value));
+    presets.forEach(btn => btn.setAttribute("aria-pressed", +btn.dataset.grace === grace && +btn.dataset.term === term));
+    const bad = msg => {
+      $("terms").innerHTML = ""; $("heroValue").textContent = "—"; $("heroSub").innerHTML = '<span class="error">' + msg + "</span>";
+      $("stats").innerHTML = ""; $("tbody").innerHTML = ""; $("tfoot").innerHTML = "";
+      $("tlG").style.flex = "0"; $("tlP").style.flex = "0"; $("lgG").textContent = ""; $("lgP").textContent = "";
+    };
+    if (!(amount > 0)) return bad("Укажите сумму займа больше нуля.");
+    if (!(grace >= 0)) return bad("Укажите льготный период, можно 0.");
+    if (mode === "term") {
+      if (!(budget > 0)) return bad("Укажите, сколько готовы платить в месяц.");
+      term = termForPayment({ amount, rate, grace, budget });
+      if (!term) return bad("Такого платежа не хватит для этой суммы. Минимальный платёж: " +
+        fmt(calc({ amount, rate, grace, term: MAX_TERM }).payment) + ".");
+    }
+    if (!(term >= 1)) return bad("Укажите срок займа.");
+
+    const r = calc({ amount, rate, grace, term });
+
+    const total = grace + r.n;
+    const terms = [
+      ["Сумма займа", Number.isInteger(amount) ? nf0.format(amount) : fmt(amount)],
+      ["Наценка", String(rate).replace(".", ",") + "% в год"],
+      ["Льготный период", months(grace)],
+      ["Срок займа без ЛП", months(r.n)],
+      ["Общий срок", months(total)],
+      ["Ежемесячный платёж", fmt(r.payment)],
+    ];
+    $("terms").innerHTML = terms.map(([k, v]) => "<div><dt>" + k + "</dt><dd>" + v + "</dd></div>").join("");
+    if (mode === "pay") {
+      $("heroLabel").textContent = "Ежемесячный платёж";
+      $("heroValue").textContent = fmt(r.payment);
+      $("heroSub").textContent = (grace ? "с " + (grace + 1) + "-го месяца, " : "") + months(r.n) + " подряд · общий срок " + months(total);
+    } else {
+      $("heroLabel").textContent = "Срок займа без льготного периода";
+      $("heroValue").textContent = months(r.n);
+      $("heroSub").textContent = "Платёж " + fmt(r.payment) + " в месяц" + (grace ? " с " + (grace + 1) + "-го месяца" : "") + " · общий срок " + months(total);
+    }
+
+    $("tlG").style.flex = String(grace); $("tlP").style.flex = String(r.n);
+    $("lgG").textContent = "Льготный период: " + months(grace);
+    $("lgP").textContent = "Платежи: " + months(r.n) + " · всего " + months(total) + " (" + (total / 12).toFixed(1).replace(".", ",") + " г.)";
+
+    // Итоговый процент наценки: 8% в год × общий срок в годах
+    const totalPct = rate * total / 12;
+    const stats = [
+      ["Наценка", fmt(r.overpay)],
+      ["Итоговый процент наценки", nfPct.format(totalPct) + "%"],
+      ["Общий срок с льготным периодом", months(total)],
+      ["Всего выплатите", fmt(r.totalPaid)],
+    ];
+    $("stats").innerHTML = stats.map(([k, v]) => '<div class="stat"><span class="k">' + k + '</span><span class="v">' + v + "</span></div>").join("");
+
+    $("tbody").innerHTML = r.rows.map(x =>
+      '<tr class="' + (x.grace ? "grace" : "") + (x.cap ? " cap" : "") + '"><td>' + x.m + (x.grace ? '<span class="tag">ЛП</span>' : "") +
+      "</td><td>" + fmt(x.start) + "</td><td>" + fmt(x.interest) +
+      "</td><td>" + fmt(x.pay) + "</td><td>" + fmt(x.end) + "</td></tr>").join("");
+    $("tfoot").innerHTML = "<tr><td>Итого</td><td></td><td>" + fmt(r.overpay) + "</td><td>" + fmt(r.totalPaid) + "</td><td></td></tr>";
+  }
+
+  // Silent caps: grace up to 12 months, term up to 60 months
+  [["grace", MAX_GRACE], ["term", MAX_TERM]].forEach(([id, max]) => $(id).addEventListener("input", e => {
+    if (num(e.target.value) > max) e.target.value = max;
+    render();
+  }));
+  // Group thousands with spaces while typing, keeping the caret after the same digit
+  const groupDigits = e => {
+    const el = e.target, raw = el.value, caret = el.selectionStart ?? raw.length;
+    const digitsBefore = raw.slice(0, caret).replace(/[^\d,.]/g, "").length;
+    let [int, dec] = raw.replace(/[^\d,.]/g, "").replace(".", ",").split(",");
+    int = (int || "").replace(/^0+(?=\d)/, "");
+    let out = int.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    if (dec !== undefined) out += "," + dec.replace(/\D/g, "").slice(0, 2);
+    el.value = out;
+    let pos = 0, seen = 0;
+    while (pos < out.length && seen < digitsBefore) { if (out[pos] !== " ") seen++; pos++; }
+    el.setSelectionRange(pos, pos);
+    render();
+  };
+  $("amount").addEventListener("input", groupDigits);
+  $("pay").addEventListener("input", groupDigits);
+
+  function setMode(m) {
+    mode = m;
+    $("modePay").setAttribute("aria-selected", m === "pay");
+    $("modeTerm").setAttribute("aria-selected", m === "term");
+    $("presetField").hidden = $("termField").hidden = m !== "pay";
+    $("payField").hidden = m !== "term";
+    render();
+  }
+  $("modePay").addEventListener("click", () => setMode("pay"));
+  $("modeTerm").addEventListener("click", () => setMode("term"));
+  presets.forEach(btn => btn.addEventListener("click", () => {
+    $("grace").value = btn.dataset.grace; $("term").value = btn.dataset.term; render();
+  }));
+  $("form").addEventListener("submit", e => e.preventDefault());
+  render();
+</script>
+
+</body>
+</html>
