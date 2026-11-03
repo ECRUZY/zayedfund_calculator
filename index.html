@@ -240,7 +240,8 @@
     return n + " месяцев";
   }
 
-  const RATE = 8;       // наценка, % в год (фиксированная)
+  const RATE = 13;      // ставка для расчёта аннуитета, как в таблице (Наценка по займу ФШЗ)
+  const SHOWN_RATE = 8; // наценка, которая показывается на странице, % в год
   const MAX_GRACE = 12, MAX_TERM = 60;
   const $ = id => document.getElementById(id);
   const presets = document.querySelectorAll("[data-term]");
@@ -277,9 +278,11 @@
     const r = calc({ amount, rate, grace, term });
 
     const total = grace + r.n;
+    // Итоговый процент наценки: 8% в год × общий срок в годах
+    const totalPct = SHOWN_RATE * total / 12;
     const terms = [
       ["Сумма займа", Number.isInteger(amount) ? nf0.format(amount) : fmt(amount)],
-      ["Наценка", String(rate).replace(".", ",") + "% в год"],
+      ["Наценка", SHOWN_RATE + "% в год"],
       ["Льготный период", months(grace)],
       ["Срок займа без ЛП", months(r.n)],
       ["Общий срок", months(total)],
@@ -300,8 +303,6 @@
     $("lgG").textContent = "Льготный период: " + months(grace);
     $("lgP").textContent = "Платежи: " + months(r.n) + " · всего " + months(total) + " (" + (total / 12).toFixed(1).replace(".", ",") + " г.)";
 
-    // Итоговый процент наценки: 8% в год × общий срок в годах
-    const totalPct = rate * total / 12;
     const stats = [
       ["Наценка", fmt(r.overpay)],
       ["Итоговый процент наценки", nfPct.format(totalPct) + "%"],
