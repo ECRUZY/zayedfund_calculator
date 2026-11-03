@@ -35,16 +35,16 @@
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; padding-block: 0 56px; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; padding-block: 0 24px; }
   .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
   .band { background: radial-gradient(ellipse 70% 120% at 65% 40%, var(--band-light) 0%, var(--band-dark) 75%); color: var(--on-band); }
-  .band-inner { max-width: 1120px; margin: 0 auto; padding-block: 36px 84px; display: grid; gap: 10px; }
+  .band-inner { max-width: 1120px; margin: 0 auto; padding-block: 28px 76px; display: grid; gap: 10px; }
   .logo { display: block; width: 90px; max-width: 60%; height: auto; margin-bottom: 10px; }
   .band h1 { margin: 0; font: 700 clamp(28px, 4.5vw, 40px)/1.15 var(--font-head); text-wrap: balance; max-width: 22ch; }
   .band p { margin: 0; font-size: 15px; opacity: 0.9; max-width: 60ch; }
 
-  .wrap { max-width: 1152px; margin: -52px auto 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; position: relative; }
+  .wrap { max-width: 1152px; margin: -52px auto 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; position: relative; }
   .terms { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; margin: 0; background: var(--panel); border-radius: 12px; box-shadow: 0 6px 24px rgb(0 0 0 / 0.08); padding: 18px 8px; }
   @media (max-width: 900px) { .terms { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 14px; } }
   @media (max-width: 520px) { .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -83,7 +83,7 @@
     padding: 4px 6px 10px; margin-bottom: -1px; cursor: pointer;
   }
   .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
-  .right { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; }
+  .right { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
   .hero { display: grid; gap: 4px; }
   .eyebrow { font-size: 13px; font-weight: 500; color: var(--muted); }
   .big { font: 700 clamp(32px, 5vw, 46px)/1.1 var(--font-head); font-variant-numeric: tabular-nums; color: var(--accent); overflow-wrap: anywhere; }
@@ -105,18 +105,6 @@
   .stat .k { font-size: 12px; color: var(--muted); }
   .stat .v { font: 700 16px var(--font-head); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 
-  .sched-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-  .sched-head h2 { margin: 0; font: 700 22px var(--font-head); }
-  .table-box { overflow: auto; max-height: 520px; border: 1px solid var(--line); border-radius: 8px; }
-  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 13px; }
-  th, td { padding: 8px 12px; text-align: right; white-space: nowrap; }
-  th { position: sticky; top: 0; background: var(--bg); font-weight: 500; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); z-index: 1; }
-  th:first-child, td:first-child { text-align: left; }
-  td { font-family: var(--font-num); font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line); }
-  tr.grace td { background: var(--grace-soft); }
-  tr.cap td { box-shadow: inset 0 2px 0 var(--grace); }
-  tfoot td { font-weight: 700; background: var(--accent-soft); position: sticky; bottom: 0; }
-  .tag { display: inline-block; font: 500 10px var(--font-body); color: #ffffff; background: var(--grace); border-radius: 10px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -184,20 +172,6 @@
       <div class="stats" id="stats"></div>
       <p class="disclaimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.5h.01"/></svg><span>Расчёт предварительный и не является публичной офертой. Итоговые условия финансирования Фонд определяет после рассмотрения заявки.</span></p>
 
-      <section class="panel">
-        <div class="sched-head">
-          <h2>График платежей</h2>
-        </div>
-        <div class="table-box">
-          <table>
-            <thead>
-              <tr><th>Месяц</th><th>Долг на начало</th><th>Наценка</th><th>Платёж</th><th>Долг на конец</th></tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-            <tfoot id="tfoot"></tfoot>
-          </table>
-        </div>
-      </section>
     </div>
   </div>
 </div>
@@ -264,7 +238,7 @@
     presets.forEach(btn => btn.setAttribute("aria-pressed", +btn.dataset.grace === grace && +btn.dataset.term === term));
     const bad = msg => {
       $("terms").innerHTML = ""; $("heroValue").textContent = "—"; $("heroSub").innerHTML = '<span class="error">' + msg + "</span>";
-      $("stats").innerHTML = ""; $("tbody").innerHTML = ""; $("tfoot").innerHTML = "";
+      $("stats").innerHTML = "";
       $("tlG").style.flex = "0"; $("tlP").style.flex = "0"; $("lgG").textContent = ""; $("lgP").textContent = "";
     };
     if (!(amount > 0)) return bad("Укажите сумму займа больше нуля.");
@@ -312,11 +286,6 @@
     ];
     $("stats").innerHTML = stats.map(([k, v]) => '<div class="stat"><span class="k">' + k + '</span><span class="v">' + v + "</span></div>").join("");
 
-    $("tbody").innerHTML = r.rows.map(x =>
-      '<tr class="' + (x.grace ? "grace" : "") + (x.cap ? " cap" : "") + '"><td>' + x.m + (x.grace ? '<span class="tag">ЛП</span>' : "") +
-      "</td><td>" + fmt(x.start) + "</td><td>" + fmt(x.interest) +
-      "</td><td>" + fmt(x.pay) + "</td><td>" + fmt(x.end) + "</td></tr>").join("");
-    $("tfoot").innerHTML = "<tr><td>Итого</td><td></td><td>" + fmt(r.overpay) + "</td><td>" + fmt(r.totalPaid) + "</td><td></td></tr>";
   }
 
   // Silent caps: grace up to 12 months, term up to 60 months
