@@ -35,7 +35,7 @@
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; padding-block: 0 56px; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; padding-block: 0 56px; }
   .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
   .band { background: radial-gradient(ellipse 70% 120% at 65% 40%, var(--band-light) 0%, var(--band-dark) 75%); color: var(--on-band); }
@@ -229,7 +229,7 @@
 
   const nf = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
-  const nfPct = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
+  const nfPct = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
   function fmt(x) { return nf.format(x); }
   function num(s) { const v = parseFloat(String(s).replace(/[\s ]/g, "").replace(",", ".")); return isFinite(v) ? v : NaN; }
   function months(n) {
@@ -241,6 +241,7 @@
   }
 
   const RATE = 13;      // ставка для расчёта аннуитета, как в таблице (Наценка по займу ФШЗ)
+  const SHOWN_RATE = "8–9% в год"; // наценка в условиях сверху, фиксированный текст
   const MAX_GRACE = 12, MAX_TERM = 60;
   const $ = id => document.getElementById(id);
   const presets = document.querySelectorAll("[data-term]");
@@ -277,12 +278,11 @@
     const r = calc({ amount, rate, grace, term });
 
     const total = grace + r.n;
-    // Наценка как в таблице: доля переплаты от суммы займа (E7) и она же в пересчёте на год (H7)
+    // Итоговый процент наценки как в таблице: доля переплаты от суммы займа (E7)
     const totalPct = r.overpay / amount * 100;
-    const yearPct = totalPct / total * 12;
     const terms = [
       ["Сумма займа", Number.isInteger(amount) ? nf0.format(amount) : fmt(amount)],
-      ["Наценка", nfPct.format(yearPct) + "% в год"],
+      ["Наценка", SHOWN_RATE],
       ["Льготный период", months(grace)],
       ["Срок займа без ЛП", months(r.n)],
       ["Общий срок", months(total)],
