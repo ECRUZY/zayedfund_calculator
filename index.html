@@ -229,7 +229,7 @@
 
   const nf = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
-  const nfPct = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+  const nfPct = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
   function fmt(x) { return nf.format(x); }
   function num(s) { const v = parseFloat(String(s).replace(/[\s ]/g, "").replace(",", ".")); return isFinite(v) ? v : NaN; }
   function months(n) {
